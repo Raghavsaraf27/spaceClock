@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minimal Dark Planet Clock</title>
+  <style>
+    :root {
+      /* Notion dark background */
+      --bg-color: #191919; 
+      --sun-color: #ffffff;
+      --orbit-color: rgba(255, 255, 255, 0.08);
+      --hour-planet: #2eaadc;   /* Soft Notion Blue */
+      --min-planet: #eb5757;    /* Soft Red */
+      --sec-planet: #787774;    /* Muted Grey */
+      --text-dim: #787774;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+      padding: 10px;
+    }
+
+    /* Container adjusts dynamically */
+    .space-clock {
+      position: relative;
+      width: clamp(180px, 45vw, 260px);
+      height: clamp(180px, 45vw, 260px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Central Sun */
+    .sun {
+      position: absolute;
+      width: clamp(12px, 3.5vw, 18px);
+      height: clamp(12px, 3.5vw, 18px);
+      background: var(--sun-color);
+      border-radius: 50%;
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
+      z-index: 10;
+    }
+
+    /* Orbital Rings */
+    .orbit {
+      position: absolute;
+      border: 1px dashed var(--orbit-color);
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: transform 0.2s cubic-bezier(0.4, 2.08, 0.55, 0.44);
+    }
+
+    .orbit-seconds {
+      width: 45%;
+      height: 45%;
+    }
+
+    .orbit-minutes {
+      width: 70%;
+      height: 70%;
+    }
+
+    .orbit-hours {
+      width: 95%;
+      height: 95%;
+    }
+
+    /* Planets onOrbits */
+    .planet {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+    }
+
+    .planet-sec {
+      width: clamp(6px, 1.8vw, 8px);
+      height: clamp(6px, 1.8vw, 8px);
+      background: var(--sec-planet);
+      box-shadow: 0 0 8px var(--sec-planet);
+    }
+
+    .planet-min {
+      width: clamp(8px, 2.4vw, 12px);
+      height: clamp(8px, 2.4vw, 12px);
+      background: var(--min-planet);
+      box-shadow: 0 0 10px var(--min-planet);
+    }
+
+    .planet-hour {
+      width: clamp(12px, 3.2vw, 16px);
+      height: clamp(12px, 3.2vw, 16px);
+      background: var(--hour-planet);
+      box-shadow: 0 0 12px var(--hour-planet);
+    }
+
+    /* Digital Time & Date Subtitle */
+    .clock-info {
+      margin-top: 18px;
+      text-align: center;
+    }
+
+    .time-text {
+      font-size: clamp(1rem, 3.5vw, 1.4rem);
+      font-weight: 500;
+      color: #e3e3e3;
+      letter-spacing: 1px;
+    }
+
+    .date-text {
+      font-size: clamp(0.65rem, 2vw, 0.85rem);
+      color: var(--text-dim);
+      margin-top: 3px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="space-clock">
+    <!-- Center Star -->
+    <div class="sun"></div>
+
+    <!-- Seconds Orbit (Inner) -->
+    <div class="orbit orbit-seconds" id="sec-orbit">
+      <div class="planet planet-sec"></div>
+    </div>
+
+    <!-- Minutes Orbit (Middle) -->
+    <div class="orbit orbit-minutes" id="min-orbit">
+      <div class="planet planet-min"></div>
+    </div>
+
+    <!-- Hours Orbit (Outer) -->
+    <div class="orbit orbit-hours" id="hr-orbit">
+      <div class="planet planet-hour"></div>
+    </div>
+  </div>
+
+  <div class="clock-info">
+    <div id="digital-time" class="time-text">12:00 PM</div>
+    <div id="digital-date" class="date-text">MON, JAN 1</div>
+  </div>
+
+  <script>
+    const secOrbit = document.getElementById('sec-orbit');
+    const minOrbit = document.getElementById('min-orbit');
+    const hrOrbit = document.getElementById('hr-orbit');
+    const timeDisplay = document.getElementById('digital-time');
+    const dateDisplay = document.getElementById('digital-date');
+
+    function updateClock() {
+      const now = new Date();
+
+      const seconds = now.getSeconds();
+      const minutes = now.getMinutes();
+      const hours = now.getHours();
+
+      // Rotation angles in degrees
+      const secDeg = (seconds / 60) * 360;
+      const minDeg = ((minutes + seconds / 60) / 60) * 360;
+      const hrDeg = (((hours % 12) + minutes / 60) / 12) * 360;
+
+      // Apply 360 rotation to planetary orbit rings
+      secOrbit.style.transform = `rotate(${secDeg}deg)`;
+      minOrbit.style.transform = `rotate(${minDeg}deg)`;
+      hrOrbit.style.transform = `rotate(${hrDeg}deg)`;
+
+      // Update digital readout below
+      let displayHours = hours % 12;
+      displayHours = displayHours ? displayHours : 12;
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      const formattedMins = minutes < 10 ? '0' + minutes : minutes;
+      
+      timeDisplay.innerText = `${displayHours}:${formattedMins} ${ampm}`;
+
+      const options = { weekday: 'short', month: 'short', day: 'numeric' };
+      dateDisplay.innerText = now.toLocaleDateString('en-US', options).toUpperCase();
+    }
+
+    // Refresh every second
+    updateClock();
+    setInterval(updateClock, 1000);
+  </script>
+</body>
+</html>
